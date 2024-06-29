@@ -3,8 +3,9 @@
 creates route /status for blueprint object app_views
 """
 
-from api.v1.views import app_views, validator, httpresp, storage
+from api.v1.views import app_views, validator, httpresp, storage, email, otphelper
 from models.user import User
+from models.otp import Otp
 from flask import abort, request, jsonify
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError
@@ -53,7 +54,6 @@ def login():
         })
 
 
-
 @app_views.route("/register", methods=['POST'],
                  strict_slashes=False)
 def user_register():
@@ -68,6 +68,7 @@ def user_register():
 
         newUser = User(email=validated['email'], password=validated['password'])
         response = newUser.save()
+
         if response:
             return httpresp.success({}, "Welcome to Budgtr, Registration Successful")
         else:
@@ -77,3 +78,32 @@ def user_register():
             "code" : 1,
             "message" : ve.message
         })
+
+
+@app_views.route("/send_mail", methods=['GET'],
+                 strict_slashes=False)
+def send_mail(toAddress, message)->None:
+    """
+    Send Email
+    """
+    try:
+        email.send_email(toAddress, message)
+        return jsonify({}), 200
+    except Exception as e:
+        print(e)
+
+@app_views.route("/send_otp_mail", methods=['POST'],
+                 strict_slashes=False)
+def send_otp()->None:
+    """send email otp to verify the email"""
+    try:
+        json_message = request.get_json()
+        if "email" not in json_message or json_message['email'] is "":
+            return httpresp.error({}, "Email not found", 404)
+        user_email = json_message['email']
+        otphelper.generate(5)
+        new_otp = otphelper.get_otp(user_email, storage)
+        email.send_email(user_email, str(new_otp))
+        return jsonify({}), 200
+    except Exception as e:
+        return httpresp.error({}, e, 404)
