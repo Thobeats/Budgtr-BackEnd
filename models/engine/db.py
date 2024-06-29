@@ -11,6 +11,7 @@ from sqlalchemy import create_engine, MetaData
 from models.user import User
 from models.year import Year
 from models.month import Month
+from models.otp import Otp
 from models.base_model import Base
 from dotenv import load_dotenv
 from os import getenv
@@ -20,7 +21,8 @@ from flask import abort, request, jsonify
 classes = {
     "user" : User,
     "month" : Month,
-    "year" : Year
+    "year" : Year,
+    "otp" : Otp
 }
 
 
@@ -61,7 +63,8 @@ class DB:
         try:
             self.__session.commit()
             return True
-        except:
+        except Exception as e:
+            print(e)
             self.__session.rollback()
             self.__session.flush()
             return False
@@ -81,7 +84,6 @@ class DB:
         #self.start_engine()
         check = self.__session.query(User).filter(User.email == kwargs['email'],
                                           User.password == kwargs['password'])
-        print(check)
     
     def all(self, obj=None):
         """Gets all instances of a particular class or all classes"""

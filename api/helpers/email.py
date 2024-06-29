@@ -33,9 +33,17 @@ class Email:
             print(e)
             
 
-    def send_email(self, receiver_email, message) -> None:
+    def send_email(self, receiver_email, message, type='raw') -> None:
         """send an email to a user"""
         try:
-            self.__server.sendmail('info@budgtr.com',receiver_email, message)
+            if type == 'html':
+                msg = MIMEMultipart('Alternative')
+                msg['From'] = "info@budgtr.com"
+                msg['Subject'] = "Confirm Email"
+                msg.attach(MIMEText(message, 'html'))
+                send = msg.as_string()
+            else:
+                send = message
+            self.__server.sendmail('info@budgtr.com',receiver_email, send)
         except Exception as e:
             print(e)

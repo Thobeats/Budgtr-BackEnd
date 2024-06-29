@@ -103,7 +103,10 @@ def send_otp()->None:
         user_email = json_message['email']
         otphelper.generate(5)
         new_otp = otphelper.get_otp(user_email, storage)
-        email.send_email(user_email, str(new_otp))
+        otp_email_template = open('email_templates/otp.html').read()
+        otp_email = otp_email_template.replace("[OTP]", str(new_otp))
+        email.send_email(user_email, otp_email, 'html')
         return jsonify({}), 200
     except Exception as e:
+        print(e)
         return httpresp.error({}, e, 404)
